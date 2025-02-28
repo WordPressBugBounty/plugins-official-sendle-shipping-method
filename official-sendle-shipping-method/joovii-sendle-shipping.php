@@ -3,7 +3,7 @@
  * Plugin Name: Sendle Shipping Plugin
  * Plugin URI: http://joovii.com/shipping-method/sendle-wp.html
  * Description: Tested and approved by Sendle, this plugin provides the basic connectivity between WooCommerce and Sendle. For the ultimate connectivity and features, please install the Premium Plugin.
- * Version: 6.01
+ * Version: 6.02
  * Author: Joovii
  * Author URI: http://joovii.com/installation-instruction/wp
  * License: GPL-3.0+
@@ -26,7 +26,7 @@ define( 'SENDLE_JOOVII_AU_MAX_DOMESTIC_VOLUMN', '0.100001' );
 define( 'SENDLE_JOOVII_AU_MAX_INTERNATION_VOLUMN', '0.125' );
 define( 'SENDLE_JOOVII_US_MAX_DOMESTIC_VOLUMN', '864' );
 define( 'SENDLE_JOOVII_CS_MAX_DOMESTIC_VOLUMN', '0.125' );
-define( 'SENDLE_JOOVII_WP_SENDLE_PLUGIN_VERSION', '6.01' );
+define( 'SENDLE_JOOVII_WP_SENDLE_PLUGIN_VERSION', '6.02' );
 
 add_filter( 'plugin_action_links_' . plugin_basename(__FILE__), 'joovii_action_links' );
 function joovii_action_links( $actions ) {
@@ -70,7 +70,7 @@ function ossm_sendle_dashboard() {
 	 add_submenu_page('','Track Shipment','Track Shipment', ossm_getAssignRole(),'track-shipment','ossm_track_shipment',1);
 	 add_submenu_page('','Download Shipping Label','Download Shipping Label', ossm_getAssignRole(),'download-shipping-label','ossm_download_shipping_label',1);
 	 add_submenu_page('','Cancel Sendle Order','Cancel Sendle Order', ossm_getAssignRole(),'cancel-sendle','ossm_cancel_sendle',1);
-   add_submenu_page('','View Sendle Order Details','View Sendle Order Details', ossm_getAssignRole(),'viewdetails-sendle','ossm_create_shipment',1);
+	 add_submenu_page('','View Sendle Order Details','View Sendle Order Details', ossm_getAssignRole(),'viewdetails-sendle','ossm_create_shipment',1);
 	 add_submenu_page('','Create Sendle Shipment','Create Sendle Shipment', ossm_getAssignRole(),'create-shipment','ossm_create_shipment',1 );
 }
 
@@ -88,6 +88,8 @@ require_once('validate-sendle.php');
 require_once('sendle-tracking-email.php');
 require_once("sendle-widget.php");
 require_once("cityziplookup.php");
+
+update_option('woocommerce_enable_compatibility_mode', 'yes');
 
 function ossm_sendle_shipping_method() {
   $assign_permission=ossm_getAssignPermission();

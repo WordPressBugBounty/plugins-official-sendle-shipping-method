@@ -69,8 +69,24 @@ function ossm_sendle_shipping_zone_method() {
                       ossm_logActions(" weight/weight [3] : ". $weight );
 
                       $volumeP = 0;
-                      if(trim($sendle_setting['volume_param']) == 'yes'){
-
+                      
+					  $product_length = $_product->get_length();
+					  $product_width  = $_product->get_width();
+					  $product_height = $_product->get_height();
+					  $product_length = $product_length == "" ? 0 : $product_length;
+					  $product_width  = $product_width == "" ? 0 : $product_width;
+					  $product_height = $product_height == "" ? 0 : $product_height;
+					  
+					  if($product_length <= 0 || $product_width <= 0 || $product_height <= 0 )
+					  {
+						  ossm_logActions("Product Length/Width/Height Missing ($product_length-$product_width-$product_height) " ); 
+                          wc_add_notice(  __( 'Product must have Length/Width/Height for SENDLE', 'woocommerce' ) );
+                          return;
+					  }
+					  
+					  if(trim($sendle_setting['volume_param']) == 'yes'){
+						
+						
                         if($_product->get_length() >0 ){ $volumnP_l = ossm_getDimension($_product->get_length(),$pickupCountry);
                         }else{ $volumnP_l = 0; }
 
@@ -172,7 +188,6 @@ function ossm_sendle_shipping_zone_method() {
                         $urlParam = ossm_createRequestStr ($package, $cartTotalQuatity, $cartTotalweight, $sendle_setting, $weight, $volume, 'yes' );
                         ossm_logActions(" url  :: ". $urlParam. "  ");
                         $result = ossm_calculateSendleRate ($package, $sendle_setting, $urlParam );
-
                   }
 
                   ossm_logActions(" resultArray ---> : ". print_r($result,true) );

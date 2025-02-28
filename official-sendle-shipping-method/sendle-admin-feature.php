@@ -9,28 +9,53 @@ function ossm_sendle_meta_boxes_setup(){
 		add_action( 'add_meta_boxes', 'ossm_sendle_meta_boxes' );
 	//}
 }
+
+add_action( 'add_meta_boxes', 'ossm_sendle_meta_boxes' );
+
 function ossm_sendle_meta_boxes(){
 		if (ossm_getAssignPermission()){
-	    add_meta_box(
-	        'woocommerce-track-shipment',
-	        __( 'Sendle Shipment Options' ),
-	        'ossm_sendle_shipment_options',
-	        'shop_order',
-	        'side',
-	        'default'
-	    );
+			add_meta_box(
+				'woocommerce-track-shipment',
+				__( 'Sendle Shipment Options' ),
+				'ossm_sendle_shipment_options',
+				'shop_order',
+				'side',
+				'default'
+			);
+			
+			// For new WOoCommerce
+			add_meta_box(
+				'woocommerce-track-shipment',
+				__( 'Sendle Shipment Options' ),
+				'ossm_sendle_shipment_options',
+				'woocommerce_page_wc-orders',
+				'side',
+				'high'
+			);
 		}
 }
+
+
+
 function ossm_sendle_shipment_options(){
 
   global $woocommerce, $post;
+    
 	$order = new WC_Order($post->ID);
 	//$order_number = trim(str_replace('#', '', $order->get_order_number()));
 	$order_id = trim($post->ID);
+	
+	if($post->ID == "")
+	{
+		$order_id = $_GET['id'];
+		$order = new WC_Order($order_id);
+	}
+	
 	$sendle_reference = get_post_meta($order_id,'sendle_reference',true);
 	$sendle_order_id = get_post_meta($order_id,'sendle_order_id',true);
 	$sendle_setting = maybe_unserialize( get_option('woocommerce_ossmsendle_settings') );
 	$book_shipment_on = $sendle_setting['book_shipment_on'];
+	
 	$shipping_method = @array_shift($order->get_shipping_methods());
 	$shipping_method_name = explode("-",$shipping_method['method_id']);
 	$shipping_method_name2 = explode(":",$shipping_method['method_id']);
@@ -49,7 +74,7 @@ function ossm_sendle_shipment_options(){
 	if($sendle_order_id == ''){
 
 			$sendlePost = 0;
-			$items 				= $order->get_items();
+			$items = $order->get_items();
 			$weight = 0;
 			$pv = 0;
 
@@ -134,6 +159,7 @@ function ossm_sendle_shipment_options(){
 
 	}
 
+    
 	if(!isset($ostatus) ||  $sendle_order_id == ''){ $ostatus['state'] = "yet to post"; }
 	?>
     <ul>
@@ -151,7 +177,9 @@ function ossm_sendle_shipment_options(){
 		if(isset($ostatus['state'])){
 			echo "<li>Sendle Order Status: ".$ostatus['state']."</li>";
 		}
-
+		
+		//echo "Shipping Method" ;	print_r($shipping_method_name);
+		
 		if(in_array("ossmsendle", $shipping_method_name) || $sendlePost == 1 ){
 
 
@@ -169,8 +197,8 @@ function ossm_sendle_shipment_options(){
 					}
 
 					$sendleDimensionUnit = 'm3';
-			    if($pickup_country == 'AU') { $sendleDimensionUnit = 'm3';}
-			    if($pickup_country == 'US') { $sendleDimensionUnit = 'in3';}
+					if($pickup_country == 'AU') { $sendleDimensionUnit = 'm3';}
+					if($pickup_country == 'US') { $sendleDimensionUnit = 'in3';}
 					if($pickup_country == 'CA') { $sendleDimensionUnit = 'm3';}
 					if($volume > $maxVolume){
 

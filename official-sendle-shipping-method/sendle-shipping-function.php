@@ -338,13 +338,24 @@ function ossm_createRequestStr ($package, $cartTotalQuatity, $cartTotalweight, $
       if(isset($package["destination"]["address"]) && trim($package["destination"]["address"]) != ""){
         $deliveryAddress    = "delivery_address_line1=".urlencode(trim($package["destination"]["address"]))."&";
       }
-
+	  
+	  // FOR NEW API
+	  $deliveryAddressForNewAPI = "receiver_address_line1=".urlencode(trim($package["destination"]["address"]))."&";	
+	  
       $volumnStr = '';
       if($sendle_setting['mode'] == "live"){ $sendle_apiurl = "https://api.sendle.com"; }
       else{ $sendle_apiurl = SENDLE_JOOVII_API_SANDBOX_URL; }
       $pickupLocationStr   ="pickup_suburb=".urlencode($pickupSuburb)."&pickup_postcode=".$pickupPostcode."&pickup_country=".$pickupCountry."&";
-      $deliveryLocationStr = $deliveryAddress."delivery_suburb=".urlencode($deliverySuburb)."&delivery_postcode=".$deliveryPostcode."&delivery_country=".$deliveryCountry."&";
-      $weightStr ="weight_value=".$weight."&weight_units=".$weightUnit."&";
+	  
+	  // FOR NEW API
+	  $pickupLocationStrForNewAPI = "sender_suburb=".urlencode($pickupSuburb)."&sender_postcode=".$pickupPostcode."&sender_country=".$pickupCountry."&";
+      
+	  $deliveryLocationStr = $deliveryAddress."delivery_suburb=".urlencode($deliverySuburb)."&delivery_postcode=".$deliveryPostcode."&delivery_country=".$deliveryCountry."&";
+	  
+	  // FOR NEW API
+	  $deliveryLocationStrForNewAPI = $deliveryAddressForNewAPI."receiver_suburb=".urlencode($deliverySuburb)."&receiver_postcode=".$deliveryPostcode."&receiver_country=".$deliveryCountry."&";
+      
+	  $weightStr ="weight_value=".$weight."&weight_units=".$weightUnit."&";
       $weightStr = ossm_getWeightStrForQuote ($weight, $pickupCountry );
       if($volume>0){ $volumnStr = ossm_getVolumeStrForQuote ($volume, $pickupCountry ); }
       $extraStr ="first_mile_option=".$sendle_setting['pickupoption'];
@@ -377,7 +388,11 @@ function ossm_createRequestStr ($package, $cartTotalQuatity, $cartTotalweight, $
       }
       // ------   Satchel calculation end --------------------------------------------
 
-      $urlParam = $sendle_apiurl."/api/quote?".$pickupLocationStr.$deliveryLocationStr.$weightStr.$volumnStr.$extraStr;
+	  // OLD URL 	
+      // $urlParam = $sendle_apiurl."/api/quote?".$pickupLocationStr.$deliveryLocationStr.$weightStr.$volumnStr.$extraStr;
+	  
+	  // NEW URL for NEW API  
+	  $urlParam = $sendle_apiurl . "/api/products?".$pickupLocationStrForNewAPI.$deliveryLocationStrForNewAPI.$weightStr.$volumnStr.$extraStr;
 
       return $urlParam;
 }
@@ -386,8 +401,8 @@ function ossm_calculateSendleRate ($package, $sendle_setting, $urlParam ){
 
       if(!is_callable('curl_init')){ return ; }
       $sendle_api_id 		     = $sendle_setting['api_id'];
-      $sendle_api_key 		   = $sendle_setting['api_key'];
-      //$sendle_plan_name 	 = $sendle_setting['plan_name'];
+      $sendle_api_key 		     = $sendle_setting['api_key'];
+      //$sendle_plan_name 	     = $sendle_setting['plan_name'];
 
       $args = array('method'	=> 'GET',
       'timeout'   => 30,
@@ -506,7 +521,12 @@ function ossm_createRateArray ($package, $sendle_setting, $result ){
 
       // Tax calculation end
       ossm_logActions("  Final cost without tax(sendlecost + handling_fee + markup)  : " .$sendlecost." + ".$shipping_handling_fee_add." + ".($sendlecost * $shipping_quote_markup/100));
-      $rate = array(  'id' => "ossmsendle-".$result[0]['plan_name'],
+	  $planName = $result[0]['plan_name'];
+	  $planName = $planName == "" ? $result[0]['plan'] : $planName;
+	  $planName = str_replace(" ", "-", strtolower($planName));
+	  // Define Rates
+      $rate = array(  
+	          'id' => "ossmsendle-" . $planName,
               'label'=> $sendleTitle,
               'cost'=> ($sendlecost + $shipping_handling_fee_add + ($sendlecost * $shipping_quote_markup/100)),
               'taxes'=> $taxesArray,
@@ -516,7 +536,7 @@ function ossm_createRateArray ($package, $sendle_setting, $result ){
       if($rate['cost'] == 0) { return; }
 
       //ossm_logActions(" result :: ".print_r($result,true)." ");
-      ossm_logActions(" Rate :: ".print_r($rate,true)."");
+      ossm_logActions(" Rate :: ". print_r($rate,true)."");
       return $rate;
 
 }

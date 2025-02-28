@@ -10,7 +10,7 @@ Donate link:       https://joovii.com/woocommerce-plugin/wordpress-sendle-premiu
 Requires at least: 3.0
 Tested up to:      6.6.1
 Stable tag:        shipping-delivery, woocommerce, shipping, sendle, ordering, joovii, tracking
-Version:           6.01
+Version:           6.02
 
 == Description ==
 Sendle is an award-winning, 100% carbon neutral, door-to-door shipping carrier, designed to help small businesses thrive with simple, reliable, affordable shipping.
@@ -243,7 +243,8 @@ Fixed some security issue in displaying sendle log.
 * Version 6.01 :
 Added the premium plugin link.
 https://wordpress.org/plugins/official-sendle-shipping-method
-
+* Version 6.02 :
+Sendle /quote endpoint is replaced with /products endpoint
 
 == Frequently Asked Questions ==
 https://joovii.com/discuss/
