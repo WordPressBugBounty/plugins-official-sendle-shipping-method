@@ -63,29 +63,65 @@ function ossm_sendle_shipping_zone_method() {
                       if($_product->get_weight()>0){
                         $cartTotalweight = $cartTotalweight + ($_product->get_weight() * $values['quantity']);
                       }
-
-                      ossm_logActions(" get_weight/weight [1] : ". $_product->get_weight() ."--". $weightP );
-                      ossm_logActions(" quantity/weight [2] : ". $values['quantity'] );
-                      ossm_logActions(" weight/weight [3] : ". $weight );
-
-                      $volumeP = 0;
-                      
-					  $product_length = $_product->get_length();
-					  $product_width  = $_product->get_width();
-					  $product_height = $_product->get_height();
-					  $product_length = $product_length == "" ? 0 : $product_length;
-					  $product_width  = $product_width == "" ? 0 : $product_width;
-					  $product_height = $product_height == "" ? 0 : $product_height;
 					  
-					  if($product_length <= 0 || $product_width <= 0 || $product_height <= 0 )
+					  $volumeP = 0;
+					  
+					  $dimension_log = "get_weight/weight [1] : ". $_product->get_weight() . "--" . $weightP . "<br/>" . 
+                                       "quantity/weight [2] : ". $values['quantity'] . "<br/>" . 
+                                       "weight/weight [3] : ". $weight . "<br/>" . 
+									   "Dimension of Products :: [L]x[W]x[H] = [" . $_product->get_length() . "] x [" . $_product->get_width() . 
+											 "] x [" . $_product->get_height() . "] <br/>";
+					  
+					  // HANDLE product LENGTH
+					  $product_length = $_product->get_length();
+					  // Take from Settings 
+					  if( $product_length == "" || $product_length == 0 )
 					  {
-						  ossm_logActions("Product Length/Width/Height Missing ($product_length-$product_width-$product_height) " ); 
-                          wc_add_notice(  __( 'Product must have Length/Width/Height for SENDLE', 'woocommerce' ) );
-                          return;
+						 if( isset($sendle_setting['product_default_length']) 
+						&& $sendle_setting['product_default_length'] != ""
+						&& $sendle_setting['product_default_length'] != 0
+						 )
+						 {
+							$product_length = $sendle_setting['product_default_length'];
+						 }							 
 					  }
+					  $product_length = ($product_length == "" || $product_length == "0") ? 5 : $product_length;
+					  
+					  // HANDLE product WIDTH
+					  $product_width  = $_product->get_width();
+					  // Take from Settings 
+					  if( $product_width == "" || $product_width == 0 )
+					  {
+						 if( isset($sendle_setting['product_default_width']) 
+						&& $sendle_setting['product_default_width'] != ""
+						&& $sendle_setting['product_default_width'] != 0
+						 )
+						 {
+							$product_width = $sendle_setting['product_default_width'];
+						 }							 
+					  }
+					  $product_width = ($product_width == "" || $product_width == "0") ? 5 : $product_width;
+					  
+					  // HANDLE product HEIGHT
+					  $product_height = $_product->get_height();
+					  // Take from Settings 
+					  if( $product_height == "" || $product_height == 0 )
+					  {
+						 if( isset($sendle_setting['product_default_height']) 
+						&& $sendle_setting['product_default_height'] != ""
+						&& $sendle_setting['product_default_height'] != 0
+						 )
+						 {
+							$product_height = $sendle_setting['product_default_height'];
+						 }							 
+					  }
+					  $product_height = ($product_height == "" || $product_height == "0") ? 5 : $product_height;
+					  
+					  $dimension_log .= "Converted Dimensions :: $product_length X $product_width X $product_height <br/>";
+					  
+					  
 					  
 					  if(trim($sendle_setting['volume_param']) == 'yes'){
-						
 						
                         if($_product->get_length() >0 ){ $volumnP_l = ossm_getDimension($_product->get_length(),$pickupCountry);
                         }else{ $volumnP_l = 0; }
@@ -98,9 +134,14 @@ function ossm_sendle_shipping_zone_method() {
 
                         $volumeP = ( ( $volumnP_l * $volumnP_w * $volumnP_h ));
                         $volume += ($volumeP * $values['quantity']);
-                        ossm_logActions(" volume-> :: ". $volume ." = ". $volumnP_l. "--". $volumnP_w."--".$volumnP_h );
+                        
+						$dimension_log .= "Volume-> :: " . $volume . " = " . $volumnP_l . "--" . $volumnP_w . "--" . $volumnP_h  . "<br/>";
                       }
-                      ossm_logActions(" weightP/maxWeight [3-1] : ". $weightP ." =" . $maxWeight ."-". $weight );
+					  
+                      $dimension_log .=  "weightP/maxWeight [3-1] : " . $weightP . " = " . $maxWeight . " - " . $weight . "<br/>";
+					  
+					  ossm_logActions( $dimension_log );
+					  
                       if($weightP > 0){
                         if($weightP > $maxWeight){
                           if($sendle_setting['warningtext_enable'] == 'yes'){

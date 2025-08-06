@@ -9,7 +9,7 @@ add_action( 'admin_notices', 'ossm_sendle_shipping_global_notice' );
 
 function ossm_is_sendle_widget_enable(){
 
-	$sendle_setting  = maybe_unserialize( get_option('woocommerce_ossmsendle_settings') );
+  $sendle_setting  = maybe_unserialize( get_option('woocommerce_ossmsendle_settings') );
   $api_id = '';
   if(isset($sendle_setting['api_id'])){
     $api_id = $sendle_setting['api_id'];

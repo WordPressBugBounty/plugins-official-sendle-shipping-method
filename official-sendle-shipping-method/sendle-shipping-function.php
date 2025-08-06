@@ -819,28 +819,34 @@ function ossm_arrayToString($result){
 
 function ossm_create_shipment(){
 	$order_id = sanitize_text_field($_GET['oid']);
-  $createMethod = '';
-  if(isset($_GET['method'])){
-    $createMethod = sanitize_text_field($_GET['method']);
-  }
-	ossm_logActions("  Order id# ".$order_id."-----------Sendle order created by shipmentSubmit[admin]  ");
-	if(get_post_meta( $order_id, 'sendle_reference', true )==""){
-			$response = ossm_generate_sendle_reference($order_id,'byadmin',$createMethod);
-      if(isset($response['order_id'])){
-        $sendle_order_id= sanitize_text_field($response['order_id']);
-      }
-	}else{
+    $createMethod = '';
+	if(isset($_GET['method'])){
+		$createMethod = sanitize_text_field($_GET['method']);
+	}
+	ossm_logActions("  Order id# " . $order_id . "-----------Sendle order created by shipmentSubmit[admin]  ");
+	
+	if(get_post_meta( $order_id, 'sendle_reference', true )=="")
+	{
+		$response = ossm_generate_sendle_reference($order_id,'byadmin',$createMethod);
+		if(isset($response['order_id']))
+		{
+			$sendle_order_id = sanitize_text_field($response['order_id']);
+		}
+	}
+	else
+	{
 		ossm_logActions("Order id=".$order_id." has been already posted to sendle. [admin]");
-    $sendle_order_id = get_post_meta( $order_id, 'sendle_order_id', true );
+		$sendle_order_id = get_post_meta( $order_id, 'sendle_order_id', true );
 	}
 
   $result = ossm_get_sendle_order_details($sendle_order_id);
+  
   //print_r($result);
 ?>
     <div class="wrap">
   	<h2>Shipment Information</h2>
     <?php if(isset($result['state'])){
-			echo "<br> Sendle Order Status: ".$result['state']."";
+			echo "<br> Sendle Order Status: <b>" . $result['state'] . "</b><br/>";
 		} ?>
     <?php
     if(isset($result['state'])){

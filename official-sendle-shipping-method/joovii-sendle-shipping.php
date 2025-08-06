@@ -234,12 +234,34 @@ function ossm_sendle_shipping_method() {
                                'description' => 	__( 'Enable Address Match', 'joovii' ),
                                'default'     => 	__( 'yes', 'joovii' )
                            ),
-                           'volume_param' => array(
+                           
+						   'volume_param' => array(
                            	'title'         =>	__('Enable Volume Calcultion', 'joovii'),
                            	'type'          =>	'checkbox',
                            	'description'   =>	__('Enable Volume Calcultion for quote or book shipment. Please set proper volume unit in woocommerce for your country first. ', 'joovii'),
                            	'default'       =>	__('no')
                            ),
+
+						'product_default_height' => array(
+							'title'         =>	__('Enter Default Product Height', 'joovii'),
+							'type'          =>	'text',
+							'description'   =>	__('This is required to fetch quote when your products do not have Height Defined', 'joovii'),
+							'default'       =>	__('5')
+						),
+
+						'product_default_length' => array(
+							'title'         =>	__('Enter Default Product Length', 'joovii'),
+							'type'          =>	'text',
+							'description'   =>	__('This is required to fetch quote when your products do not have Length Defined', 'joovii'),
+							'default'       =>	__('5')
+						),
+
+						'product_default_width' => array(
+							'title'         =>	__('Enter Default Product Width', 'joovii'),
+							'type'          =>	'text',
+							'description'   =>	__('This is required to fetch quote when your products do not have Width Defined', 'joovii'),
+							'default'       =>	__('5')
+						),
 
                            'warningtext_enable' => array(
                              'title'         =>	__('Enable warning text', 'joovii'),
@@ -463,6 +485,7 @@ function ossm_sendle_shipping_method() {
                                             //"editor"=>"Editor"
                                           ),
                  )) ;
+				 
                  if(ossm_getAssignRole() == 'administrator'){
                    $optionArray = array_merge($optionArray, $role_manager_array);
                  }

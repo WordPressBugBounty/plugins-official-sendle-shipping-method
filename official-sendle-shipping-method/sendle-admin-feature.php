@@ -41,11 +41,17 @@ function ossm_sendle_shipment_options(){
 
   global $woocommerce, $post;
     
-	$order = new WC_Order($post->ID);
-	//$order_number = trim(str_replace('#', '', $order->get_order_number()));
-	$order_id = trim($post->ID);
+	$order_id = "";
 	
-	if($post->ID == "")
+	if( $post )
+	{
+		
+		$order = new WC_Order($post->ID);
+		//$order_number = trim(str_replace('#', '', $order->get_order_number()));
+		$order_id = trim($post->ID);
+	}
+	
+	if($order_id == "")
 	{
 		$order_id = $_GET['id'];
 		$order = new WC_Order($order_id);

@@ -1,37 +1,42 @@
 <?php
 
 function ossm_validate_sendle(){
+	
+	if (!is_user_logged_in()) {
+		die('You must be logged in to submit this form.');
+	}
+	
 	$sendle_setting 		 = maybe_unserialize( get_option('woocommerce_ossmsendle_settings'));
-	$pickup_suburb 		   = $sendle_setting['pickup_suburb'];
+	$pickup_suburb 		     = $sendle_setting['pickup_suburb'];
 	$pickup_postcode		 = $sendle_setting['pickup_postcode'];
-	$shipping_quote_markup  = $sendle_setting['quote_markup'];
+	$shipping_quote_markup   = $sendle_setting['quote_markup'];
 	$sendle_id 			  	 = $sendle_setting['api_id'];
 	$sendle_key 			   = $sendle_setting['api_key'];
 	$mode 				       = $sendle_setting['mode'];
-	$pickupoption				 = $sendle_setting['pickupoption'];
-	$pickup_country 		 = (isset($_REQUEST['pickup_country']))?ossm_validate_input_text($_REQUEST['pickup_country']):"AU";
+	$pickupoption			   = $sendle_setting['pickupoption'];
+	$pickup_country 		   = (isset($_REQUEST['pickup_country']))?ossm_validate_input_text($_REQUEST['pickup_country']):"AU";
 
 	if($sendle_setting['pickup_country'] == 'US'){
 		$delivery_suburb 		= 'Brooklyn';
-		$delivery_postcode	= '11203';
+		$delivery_postcode	    = '11203';
 		$product_weight 		= '10';
-		$product_volume		  = '70';
-		$delivery_country	  = 'US';
-		$pickup_country	    = 'US';
+		$product_volume		    = '70';
+		$delivery_country	    = 'US';
+		$pickup_country	      = 'US';
 	}elseif($sendle_setting['pickup_country'] == 'CA'){
-		$delivery_suburb 		= 'Toronto';
-		$delivery_postcode	= 'M4Y 0A9';
-		$product_weight 		= '1';
+		$delivery_suburb 	  = 'Toronto';
+		$delivery_postcode	  = 'M4Y 0A9';
+		$product_weight 	  = '1';
 		$product_volume		  = '0.001';
 		$delivery_country	  = 'CA';
-		$pickup_country	    = 'CA';
+		$pickup_country	      = 'CA';
 	}else{
-		$delivery_suburb 		= 'Sydney';
-		$delivery_postcode	= '2000';
-		$product_weight 		= '1';
+		$delivery_suburb 	  = 'Sydney';
+		$delivery_postcode	  = '2000';
+		$product_weight 	  = '1';
 		$product_volume		  = '0.001';
 		$delivery_country	  = 'AU';
-		$pickup_country	    = 'AU';
+		$pickup_country	      = 'AU';
 	}
 
 	if(isset($_REQUEST['sendle_id'])){ if(trim($_REQUEST['sendle_id']) != '') { $sendle_id=ossm_validate_input_text($_REQUEST['sendle_id']); } }

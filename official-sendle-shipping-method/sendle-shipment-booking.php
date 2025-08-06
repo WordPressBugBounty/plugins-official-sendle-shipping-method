@@ -25,19 +25,21 @@ function ossm_pickup_date_delay($select_pickup_date){
 
 }
 
-function ossm_generate_sendle_reference($order_id=0, $postedby='byfn', $satchel_booking_click='normal'){
+function ossm_generate_sendle_reference($order_id=0, $postedby='byfn', $satchel_booking_click='normal')
+{
 
-	  //ossm_logActions(" ossm_generate_sendle_reference invoked ");
-	  $sendle_setting 		 = maybe_unserialize( get_option('woocommerce_ossmsendle_settings') );
-	  $pickup_suburb		   = $sendle_setting['pickup_suburb'];
-	  $pickup_postcode 		 = $sendle_setting['pickup_postcode'];
+		//ossm_logActions(" ossm_generate_sendle_reference invoked ");
+		$sendle_setting 		 = maybe_unserialize( get_option('woocommerce_ossmsendle_settings') );
+		$pickup_suburb		     = $sendle_setting['pickup_suburb'];
+		$pickup_postcode 		 = $sendle_setting['pickup_postcode'];
 		$pickup_country 		 = $sendle_setting['pickup_country'];
+		
 		//$satchel_booking 		 = $sendle_setting['satchel_booking'];
-
 		$satchel_booking 		 = '';
-		$satchel_mode 		 = '';
-		$satchel_threshold_weight 		 = '';
+		$satchel_mode 		 	 = '';
+		$satchel_threshold_weight 	 = '';
 		$satchel_threshold_qty 		 = '';
+		
 		if(isset($sendle_setting['satchel_booking'])){
 			$satchel_booking 		 = $sendle_setting['satchel_booking'];
 		}
@@ -62,45 +64,45 @@ function ossm_generate_sendle_reference($order_id=0, $postedby='byfn', $satchel_
 
 		//ossm_logActions(" -->pickup_country ".$pickup_country);
 		if(trim($pickup_country) == ''){$pickup_country = 'AU';}
-	  //$plan_name 			   = $sendle_setting['plan_name'];
-	  $select_pickup_date 	  = $sendle_setting['pickup_delay'];
+		//$plan_name 			   = $sendle_setting['plan_name'];
+		$select_pickup_date 	  = $sendle_setting['pickup_delay'];
 		if($select_pickup_date > 0){
 		}else{ $select_pickup_date=1; }
-	  $site_url 				= home_url();
-	  $order = new WC_Order( $order_id );
+		$site_url 				= home_url();
+		$order = new WC_Order( $order_id );
 
-	  $countries_obj = new WC_Countries();
-	  $countries_array = $countries_obj->get_countries();
-	  $country_states_array = $countries_obj->get_states();
+		$countries_obj = new WC_Countries();
+		$countries_array = $countries_obj->get_countries();
+		$country_states_array = $countries_obj->get_states();
 
 
-	  $receiver_name 		= get_post_meta($order_id,"_shipping_first_name",true)." ".get_post_meta($order_id,"_shipping_last_name",true);
-	  $receiver_email 	   = get_post_meta($order_id,"_billing_email",true);
-	  $receiver_phone 	   = get_post_meta($order_id,"_billing_phone",true);
-	  $receiver_address1 	= get_post_meta($order_id,"_shipping_address_1",true);
-	  $receiver_company   	 = get_post_meta($order_id,"_shipping_company",true);
-	  $receiver_address2 	= get_post_meta($order_id,"_shipping_address_2",true);
-	  $receiver_suburb 	  = get_post_meta($order_id,"_shipping_city",true);
-	  $receiver_state 	   = get_post_meta($order_id,"_shipping_state",true);
-	  $receiver_postcode 	= get_post_meta($order_id,"_shipping_postcode",true);
-	  $receiver_country 	 = get_post_meta($order_id,"_shipping_country",true);
-	  //$order_comment 	    = get_post_meta($order_id,"customer_message",true);
-	  //$order_comment = $order->customer_message;
-	  $items 				= $order->get_items();
+		$receiver_name 		= get_post_meta($order_id,"_shipping_first_name",true)." ".get_post_meta($order_id,"_shipping_last_name",true);
+		$receiver_email 	   = get_post_meta($order_id,"_billing_email",true);
+		$receiver_phone 	   = get_post_meta($order_id,"_billing_phone",true);
+		$receiver_address1 	= get_post_meta($order_id,"_shipping_address_1",true);
+		$receiver_company   	 = get_post_meta($order_id,"_shipping_company",true);
+		$receiver_address2 	= get_post_meta($order_id,"_shipping_address_2",true);
+		$receiver_suburb 	  = get_post_meta($order_id,"_shipping_city",true);
+		$receiver_state 	   = get_post_meta($order_id,"_shipping_state",true);
+		$receiver_postcode 	= get_post_meta($order_id,"_shipping_postcode",true);
+		$receiver_country 	 = get_post_meta($order_id,"_shipping_country",true);
+		//$order_comment 	    = get_post_meta($order_id,"customer_message",true);
+		//$order_comment = $order->customer_message;
+		$items 				= $order->get_items();
 
-	  $receiver_suburb_name =  $country_states_array[$receiver_country][$receiver_state];
-	  if(trim($receiver_suburb_name) =='') { $receiver_suburb_name=$receiver_state; }
+		$receiver_suburb_name =  $country_states_array[$receiver_country][$receiver_state];
+		if(trim($receiver_suburb_name) =='') { $receiver_suburb_name=$receiver_state; }
 
-	  //ossm_logActions("<---country_states_array-----".print_r($country_states_array,true)."--------->/n");
-	  //ossm_logActions("<---country_states_array-----".$receiver_country."--".$receiver_state."----".$receiver_suburb_name."----->/n");
+		//ossm_logActions("<---country_states_array-----".print_r($country_states_array,true)."--------->/n");
+		//ossm_logActions("<---country_states_array-----".$receiver_country."--".$receiver_state."----".$receiver_suburb_name."----->/n");
 
-	  $weight = 0;
-	  $volume = 0;
-	  $orderdetails = "";
+		$weight = 0;
+		$volume = 0;
+		$orderdetails = "";
 		$orderdetails_withoutsku = "";
-	  $orderdetails1 = '';
+		$orderdetails1 = '';
 		$orderdetails1_withoutsku = '';
-	  $orderprice = 0;
+		$orderprice = 0;
 
 		$woo_hs_code= '';
 		$hs_code_field_name = '';
@@ -114,10 +116,13 @@ function ossm_generate_sendle_reference($order_id=0, $postedby='byfn', $satchel_
 		$hs_code_str = '';
 		$extrafieldforint = '';
 
-	  foreach ( $items as $item ) {
-			if ( $item['product_id'] > 0 ) {
+		foreach ( $items as $item ) 
+		{
+			if ( $item['product_id'] > 0 ) 
+			{
 				ossm_logActions(" items -- [product_id=".$item['product_id']."] variation_id =".$item['variation_id']." ");
 				$product_id = $item['variation_id'];
+				
 				if(trim($product_id) == '' || trim($product_id) == '0'){
 
 					// for variation item
@@ -132,11 +137,11 @@ function ossm_generate_sendle_reference($order_id=0, $postedby='byfn', $satchel_
 					if(trim($woo_hs_code) != ''  ) { $hs_code_str = '"hs_code": "'.$woo_hs_code.'",'; }
 					if( $pickup_country != $receiver_country){
 						$extrafieldforint .= '{ "description": "'.strip_tags($_product->short_description).'",
-"value": "'.$_product->regular_price.'",
-"quantity": "'.$item['qty'].'",
-'.$hs_code_str.'
-"country_of_origin": "'.$pickup_country.'" },
-';
+							"value": "'.$_product->regular_price.'",
+							"quantity": "'.$item['qty'].'",
+							'.$hs_code_str.'
+							"country_of_origin": "'.$pickup_country.'" },
+							';
 					}
 
 					if ( ! $_product->is_virtual() ) {
@@ -179,11 +184,11 @@ function ossm_generate_sendle_reference($order_id=0, $postedby='byfn', $satchel_
 						if(trim($woo_hs_code) != ''  ) { $hs_code_str = '"hs_code": "'.$woo_hs_code.'",'; }
 						if( $pickup_country != $receiver_country){
 							$extrafieldforint .= '{ "description": "'.strip_tags($_product->short_description).'",
-"value": "'.$_product->regular_price.'",
-"quantity": "'.$item['qty'].'",
-'.$hs_code_str.'
-"country_of_origin": "'.$pickup_country.'" },
-';
+							"value": "'.$_product->regular_price.'",
+							"quantity": "'.$item['qty'].'",
+							'.$hs_code_str.'
+							"country_of_origin": "'.$pickup_country.'" },
+							';
 						}
 
 						if($_product->get_weight() > 0){
@@ -217,7 +222,7 @@ function ossm_generate_sendle_reference($order_id=0, $postedby='byfn', $satchel_
 				}
 
 			}
-	  }
+		}
 		$weight = ossm_getWeight ($weight, $pickup_country );
 		$maxWeight = ossm_maxWeightLimit ($pickup_country, trim($receiver_country) );
 		if($weight > $maxWeight){
@@ -237,20 +242,26 @@ function ossm_generate_sendle_reference($order_id=0, $postedby='byfn', $satchel_
 		ossm_logActions(" postorder3-- [orderid:".$order_id."] ".$shipping_method_name1." ");
 		ossm_logActions(" postorder4-- [orderid:".$order_id."] ".print_r($shipping_method_name2,true)." ");
 
-		if($pickup_country == "AU"){
-			if($receiver_country != "AU"){
-					if($weight == 0 || $weight  > SENDLE_JOOVII_AU_MAX_DOMESTIC_WEIGHT ){
+		if($pickup_country == "AU")
+		{
+			if($receiver_country != "AU")
+			{
+					if($weight == 0 || $weight  > SENDLE_JOOVII_AU_MAX_DOMESTIC_WEIGHT )
+					{
 						ossm_logActions(" postorder5-- [orderid:".$order_id."] -error : order item weight >25 or <=0 : weight='".$weight."'");
 						//return ;
 					}
-					if(trim($sendle_setting['volume_param']) == 'yes'){
+					if(trim($sendle_setting['volume_param']) == 'yes')
+					{
 						//$volume = (float)$volume/(1000000);//volume from cm cube to m cube.
 						if($volume <= 0 || $volume  > SENDLE_JOOVII_AU_MAX_DOMESTIC_VOLUMN){
 							ossm_logActions(" postorder6-- [orderid:".$order_id."] -error : order item Volume >0.1 or <=0 : volume='".$volume."'");
 							//return ;
 						}
 					}
-			}else{
+			}
+			else
+			{
 					if($weight == 0 || $weight  > SENDLE_JOOVII_AU_MAX_INTERNATION_WEIGHT){
 						ossm_logActions(" postorder5-- [orderid:".$order_id."] -error : order item weight >20 or <=0 : weight='".$weight."'");
 						//return ;
@@ -305,15 +316,19 @@ function ossm_generate_sendle_reference($order_id=0, $postedby='byfn', $satchel_
 		if(in_array("free_rate", $psoArr) && in_array("free_shipping", $shipping_method_name3) ){ $sendlePost = 1; }
 		if(in_array("any_method", $psoArr) ){ $sendlePost = 1; }
 
-		if(in_array("ossmsendle", $shipping_method_name2) || $sendlePost == 1){
+		if(in_array("ossmsendle", $shipping_method_name2) || $sendlePost == 1)
+		{
 			ossm_logActions(" process_as_sendle_order -- [orderid:".$order_id."] ".print_r($sendle_setting['process_as_sendle_order'],true)." ");
 			ossm_logActions(" method1 -- [orderid:".$order_id."] ".print_r($method,true)." ");
-		}else{
+		}
+		else
+		{
 			return;
 		}
 
 
 		ossm_logActions(" strlen--orderdetails  ".strlen($orderdetails1)." ");
+		
 		if(substr(trim($orderdetails1), -1) == ";"){
 			$orderdetails1 = substr(trim($orderdetails1), 0, -1);
 			$orderdetails1_withoutsku = substr(trim($orderdetails1_withoutsku), 0, -1);
@@ -365,40 +380,53 @@ function ossm_generate_sendle_reference($order_id=0, $postedby='byfn', $satchel_
 				  }";
 
 
-	  if(isset($sendle_setting['receiver_instruction'])){
-	  	$receiver_instruction = $sendle_setting['receiver_instruction'];
-		if(trim($receiver_instruction) =='') { $receiver_instruction = "Call me"; }
-	  }else{
-	  	$receiver_instruction = "Call me";
-	  }
-	  if(isset($sendle_setting['sender_instruction'])){
-	  	$sender_instruction =  $sendle_setting['sender_instruction'];
-		if(trim($sender_instruction) =='') { $sender_instruction = "Call me"; }
-	  }else{
-	  	$sender_instruction = "Call me";
-	  }
+		if(isset($sendle_setting['receiver_instruction']))
+		{
+			$receiver_instruction = $sendle_setting['receiver_instruction'];
+			if(trim($receiver_instruction) =='') { $receiver_instruction = "Call me"; }
+		}
+		else
+		{
+			$receiver_instruction = "Call me";
+		}
+		
+		if(isset($sendle_setting['sender_instruction']))
+		{
+			$sender_instruction =  $sendle_setting['sender_instruction'];
+			if(trim($sender_instruction) =='') { $sender_instruction = "Call me"; }
+		}
+		else
+		{
+			$sender_instruction = "Call me";
+		}
 
-	  if(($weight<=0.5)){
-	  	//$receiver_instruction = "";
-	  }else{
-	  	//$receiver_instruction = (trim($order_comment)!=""?$order_comment:$receiver_instruction);
-	  }
+		if(($weight<=0.5))
+		{
+			//$receiver_instruction = "";
+		}
+		else
+		{
+			//$receiver_instruction = (trim($order_comment)!=""?$order_comment:$receiver_instruction);
+		}
 
 
 		$pickupdateStr ='';
 		if(trim($select_pickup_date) > 1 ) { $pickupdateStr ='"pickup_date": "$$$pickupdate$$$",'; }
 		if($sendle_setting['pickupoption'] == 'drop off') { $pickupdateStr =''; }
 
-		if(isset($sendle_setting['enable_customer_reference'])){
+		if(isset($sendle_setting['enable_customer_reference']))
+		{
 			$customer_reference = apply_filters('ossm_filter_customer_reference', $order_id);
 			if ($customer_reference && strlen($customer_reference) >= 255) $customer_reference = $order_id;
 			ossm_logActions("[orderid:".$order_id."] ossm_filter_customer_reference Customer Reference : ".$customer_reference." ");
-		}else{
+		}
+		else
+		{
 			$customer_reference = $order_id;
 		}
 
-	  $wp_version = get_bloginfo( 'version' );
-	  $json = '{
+		$wp_version = get_bloginfo( 'version' );
+		$json = '{
 				'.$pickupdateStr.'
 				"first_mile_option": "'.$sendle_setting['pickupoption'].'",
 				"description": "Shipment Booked with Order Id : '.$order_id.' from '.$site_url.'",
@@ -429,7 +457,7 @@ function ossm_generate_sendle_reference($order_id=0, $postedby='byfn', $satchel_
 		$new_json = '';
 		$pickupDate = date_i18n('Y-m-d');
 		$select_pickup_date = ossm_pickup_date_delay($select_pickup_date);
-	  if($select_pickup_date > 1){
+		if($select_pickup_date > 1){
 			$pickupDate = date('Y-m-d',date(strtotime("+".$select_pickup_date." day", strtotime($pickupDate))));
 			ossm_logActions(" order pick date ".$select_pickup_date."  :: ".$pickupDate." ");
 		}
@@ -467,7 +495,7 @@ function ossm_generate_sendle_reference($order_id=0, $postedby='byfn', $satchel_
 								break;
 							}
 						}else{
-							echo "Error in Posting shipment to sendle api :: ". print_r($response, true);
+							echo "[Order ID :: $order_id] Error in Posting shipment to sendle api :: ". print_r($response, true);
 							update_post_meta( $order_id, 'sendle_post_error', print_r($response, true) );
 							break;
 						}
@@ -476,15 +504,17 @@ function ossm_generate_sendle_reference($order_id=0, $postedby='byfn', $satchel_
 				}else{
 
 					$errerArr[0]=0; $errerArr[1]=$response;
-					ossm_logActions("  Order Success ".$postedby." [orderid:".$order_id."]  :: ".$new_json." ");
-					ossm_logActions("  Order Success ".$postedby." [orderid:".$order_id."]  :: ".print_r($errerArr, true)." ");
+					ossm_logActions("Order Success [1] " . $postedby . " [orderid:" . $order_id . "]  :: " . $new_json . " ");
+					ossm_logActions("Order Success [2] " . $postedby . " [orderid:" . $order_id . "]  :: " . print_r($errerArr, true) . " ");
 
-					update_post_meta( $order_id, 'sendle_order_id', $response['order_id'] );
-					update_post_meta( $order_id, 'sendle_reference', $response['sendle_reference'] );
-					update_post_meta( $order_id, 'sendle_tracking_url', $response['tracking_url'] );
-					update_post_meta( $order_id, 'sendle_response', $return );
-					update_post_meta( $order_id, 'sendle_post', $new_json );
-
+					$a = update_post_meta( $order_id, 'sendle_order_id', $response['order_id'] );
+					$b = update_post_meta( $order_id, 'sendle_reference', $response['sendle_reference'] );
+					$c = update_post_meta( $order_id, 'sendle_tracking_url', $response['tracking_url'] );
+					$d = update_post_meta( $order_id, 'sendle_response', $return );
+					$e = update_post_meta( $order_id, 'sendle_post', $new_json );
+					
+					ossm_logActions("Meta Data for Order ID [$order_id] Update Status : [$a] [$b] [$c] [$d] [$e]");
+					
 					// update joovii with siteurl and sendleid and orderno
 					ossm_updateSendleOrderWithJoovii($sendle_setting, $response);
 
@@ -614,8 +644,15 @@ function ossm_postOrderCurl($json , $order_id, $postedby, $pickupDate, $alterIde
 	$api_id 	= $sendle_setting['api_id'];
 	$api_key 	= $sendle_setting['api_key'];
 	$api_mode = $sendle_setting['mode'];
-	if($api_mode == "live"){ $apiurl = "https://api.sendle.com";
-	}else{ $apiurl = SENDLE_JOOVII_API_SANDBOX_URL; }
+	if($api_mode == "live")
+	{ 
+		$apiurl = "https://api.sendle.com";
+	}
+	else
+	{ 
+		$apiurl = SENDLE_JOOVII_API_SANDBOX_URL; 
+	}
+	
 	$url = $apiurl."/api/orders";
 	ossm_logActions(" apiurl [orderid:".$order_id."] :: ".$url." ");
 	$appendStr = '';
@@ -626,7 +663,7 @@ function ossm_postOrderCurl($json , $order_id, $postedby, $pickupDate, $alterIde
 		$appendStr = "-".$pickupDate;
 	}
 	$idempotencyKey = md5($order_id."-".$api_key.$appendStr."-".rand(11, 99));
-	ossm_logActions(" raw idempotencyKey   :: ".$order_id."-".$api_key.$appendStr."-".rand(11, 99));
+	ossm_logActions("[ORDER ID : $order_id] raw idempotencyKey   :: ".$order_id."-".$api_key.$appendStr."-".rand(11, 99));
 	$args = array(
 					'timeout'     => 30,
 					'user-agent'  => 'Joovii WooCommerce/3.2.4',
