@@ -9,7 +9,7 @@ $s(document).ready(function($) {
         if(ref.length != 6){
             alert("Your requested reference number was not found.");
         }else{
-            var data = {'action': 'sendletrack','reference': ref};
+            var data = {'action': 'sendletrack', 'reference': ref, 'nonce': sendletracking.nonce};
             $.post(sendletracking.ajaxurl, data, function(response) {
                 var response = $.parseJSON(response);
                 if(response.result == 1){

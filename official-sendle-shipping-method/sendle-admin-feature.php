@@ -1,4 +1,7 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 
 add_action( 'load-post.php', 'ossm_sendle_meta_boxes_setup' );
 add_action( 'load-post-new.php', 'ossm_sendle_meta_boxes_setup' );
@@ -16,7 +19,7 @@ function ossm_sendle_meta_boxes(){
 		if (ossm_getAssignPermission()){
 			add_meta_box(
 				'woocommerce-track-shipment',
-				__( 'Sendle Shipment Options' ),
+				__( 'Sendle Shipment Options', 'official-sendle-shipping-method' ),
 				'ossm_sendle_shipment_options',
 				'shop_order',
 				'side',
@@ -26,7 +29,7 @@ function ossm_sendle_meta_boxes(){
 			// For new WOoCommerce
 			add_meta_box(
 				'woocommerce-track-shipment',
-				__( 'Sendle Shipment Options' ),
+				__( 'Sendle Shipment Options', 'official-sendle-shipping-method' ),
 				'ossm_sendle_shipment_options',
 				'woocommerce_page_wc-orders',
 				'side',
@@ -36,8 +39,12 @@ function ossm_sendle_meta_boxes(){
 }
 
 
+function ossm_sendle_shipment_options()
+{
 
-function ossm_sendle_shipment_options(){
+  if ( ! is_user_logged_in() || ! current_user_can( 'manage_woocommerce' ) ) {
+      return;
+  }
 
   global $woocommerce, $post;
     
@@ -45,20 +52,37 @@ function ossm_sendle_shipment_options(){
 	
 	if( $post )
 	{
-		
+		// LOAD ORder
 		$order = new WC_Order($post->ID);
 		//$order_number = trim(str_replace('#', '', $order->get_order_number()));
 		$order_id = trim($post->ID);
 	}
 	
-	if($order_id == "")
-	{
-		$order_id = $_GET['id'];
-		$order = new WC_Order($order_id);
+	if ( empty( $order_id ) && isset( $_GET['id'] ) ) {
+	    $order_id = absint( wp_unslash( $_GET['id'] ) );
+
+	    // LOAD Order
+  		$order    = new WC_Order( $order_id );
 	}
-	
+
 	$sendle_reference = get_post_meta($order_id,'sendle_reference',true);
 	$sendle_order_id = get_post_meta($order_id,'sendle_order_id',true);
+
+	// Fallback to WooCommerce order meta (HPOS-safe)
+	if ( $sendle_reference === '' || $sendle_order_id === '' ) {
+
+	    if ( $order ) {
+
+	        if ( $sendle_reference === '' ) {
+	            $sendle_reference = $order->get_meta( 'sendle_reference', true );
+	        }
+
+	        if ( $sendle_order_id === '' ) {
+	            $sendle_order_id = $order->get_meta( 'sendle_order_id', true );
+	        }
+	    }
+	}
+
 	$sendle_setting = maybe_unserialize( get_option('woocommerce_ossmsendle_settings') );
 	$book_shipment_on = $sendle_setting['book_shipment_on'];
 	
@@ -68,7 +92,13 @@ function ossm_sendle_shipment_options(){
 
 	$pickup_country 		 = $sendle_setting['pickup_country'];
 	$receiver_country 	 = get_post_meta($order_id,"_shipping_country",true);
-
+  
+  if ( $receiver_country === '' ) {
+	    if ( $order ) {
+	        $receiver_country = $order->get_shipping_country();
+	    }
+	} 
+	
 	$satchel_booking = $sendle_setting['satchel_booking'];
 	//print_r($shipping_method);
 	//print_r($shipping_method_name);
@@ -78,15 +108,12 @@ function ossm_sendle_shipment_options(){
 	$volume = 0;
 	$maxVolume = 0;
 	if($sendle_order_id == ''){
-
 			$sendlePost = 0;
 			$items = $order->get_items();
 			$weight = 0;
 			$pv = 0;
-
 			foreach ( $items as $item ) {
 				if ( $item['product_id'] > 0 ) {
-
 					$product_id = $item['variation_id'];
 					if(trim($product_id) == '' || trim($product_id) == '0'){
 						// for variation item
@@ -105,9 +132,7 @@ function ossm_sendle_shipment_options(){
 								}
 							}
 						}
-
 					}else{
-
 						// for root item [which has no variation products]
 						$variation_id = $item['variation_id'];
 						$_product = wc_get_product($product_id);
@@ -129,7 +154,6 @@ function ossm_sendle_shipment_options(){
 									$volume += (float)$pv * $item['qty'];
 								}
 							}
-
 						}
 					}
 				}
@@ -141,7 +165,6 @@ function ossm_sendle_shipment_options(){
 			//echo $pickup_country."-".$receiver_country."-".$weight."-".$maxWeight."-".$volume."-".$maxVolume;
 
 	}else{
-
 
 		$api_id = $sendle_setting['api_id'];
 		$api_key = $sendle_setting['api_key'];
@@ -164,7 +187,6 @@ function ossm_sendle_shipment_options(){
 		$ostatus = json_decode($return, true);
 
 	}
-
     
 	if(!isset($ostatus) ||  $sendle_order_id == ''){ $ostatus['state'] = "yet to post"; }
 	?>
@@ -181,13 +203,12 @@ function ossm_sendle_shipment_options(){
 			if(in_array("any_method", $psoArr) ){ $sendlePost = 1; }
 		}
 		if(isset($ostatus['state'])){
-			echo "<li>Sendle Order Status: ".$ostatus['state']."</li>";
+			echo '<li>' . esc_html__( 'Sendle Order Status:', 'official-sendle-shipping-method' ) . ' ' . esc_html( $ostatus['state'] ) . '</li>';
 		}
 		
 		//echo "Shipping Method" ;	print_r($shipping_method_name);
 		
 		if(in_array("ossmsendle", $shipping_method_name) || $sendlePost == 1 ){
-
 
 			if($weight > $maxWeight || $volume > $maxVolume){
 
@@ -196,25 +217,63 @@ function ossm_sendle_shipment_options(){
 			    if($pickup_country == 'US') { $sendleWeightUnit = 'lbs';}
 					if($pickup_country == 'CA') { $sendleWeightUnit = 'kg';}
 					if($weight > $maxWeight){
-						echo "<li><b>Your order weight is greater than the sendle max weight. Please book seperate shipments. </b></li>";
-						echo "<li>Order weight: ".round($weight,2)." ".$sendleWeightUnit." </li>";
-						echo "<li>Sendle max weight: ".$maxWeight." ".$sendleWeightUnit."  </li>";
-						echo "<li>&nbsp;</li>";
+						
+						echo '<li><strong>' . esc_html__( 'Your order weight is greater than the Sendle max weight. Please book separate shipments.', 'official-sendle-shipping-method' ) . '</strong></li>';
+
+						echo '<li>' . sprintf(
+						    /* translators: 1: order weight value, 2: weight unit */
+						    esc_html__( 'Order weight: %1$s %2$s', 'official-sendle-shipping-method' ),
+						    esc_html( round( $weight, 2 ) ),
+						    esc_html( $sendleWeightUnit )
+						) . '</li>';
+
+
+						echo '<li>' . sprintf(
+						    /* translators: 1: maximum allowed weight, 2: weight unit */
+						    esc_html__( 'Sendle max weight: %1$s %2$s', 'official-sendle-shipping-method' ),
+						    esc_html( $maxWeight ),
+						    esc_html( $sendleWeightUnit )
+						) . '</li>';
+
+
+						echo '<li>&nbsp;</li>';
+
 					}
 
 					$sendleDimensionUnit = 'm3';
 					if($pickup_country == 'AU') { $sendleDimensionUnit = 'm3';}
 					if($pickup_country == 'US') { $sendleDimensionUnit = 'in3';}
 					if($pickup_country == 'CA') { $sendleDimensionUnit = 'm3';}
+					
 					if($volume > $maxVolume){
 
-						echo "<li><b>Your order volume is greater than the sendle max volume. Please book seperate shipments. </b></li>";
-						echo "<li>Order volume: ".round($volume,2)." ".$sendleDimensionUnit." </li>";
-						if($pickup_country == 'AU'){
-							echo "<li>Sendle max volume: 0.1 m3  </li>";
-						}else{
-							echo "<li>Sendle max volume: ".$maxVolume." ".$sendleDimensionUnit."  </li>";
-						}
+							echo '<li><strong>' . esc_html__(
+							    'Your order volume is greater than the Sendle max volume. Please book separate shipments.',
+							    'official-sendle-shipping-method'
+							) . '</strong></li>';
+
+							echo '<li>' . sprintf(
+							    /* translators: 1: order volume value, 2: volume unit */
+							    esc_html__( 'Order volume: %1$s %2$s', 'official-sendle-shipping-method' ),
+							    esc_html( round( $volume, 2 ) ),
+							    esc_html( $sendleDimensionUnit )
+							) . '</li>';
+
+							if ( $pickup_country === 'AU' ) {
+							    echo '<li>' . esc_html__(
+							        'Sendle max volume: 0.1 m3',
+							        'official-sendle-shipping-method'
+							    ) . '</li>';
+							} else {
+							    echo '<li>' . sprintf(
+							        /* translators: 1: maximum allowed volume, 2: volume unit */
+							        esc_html__( 'Sendle max volume: %1$s %2$s', 'official-sendle-shipping-method' ),
+							        esc_html( $maxVolume ),
+							        esc_html( $sendleDimensionUnit )
+							    ) . '</li>';
+							}
+
+
 					}
 
 			}else{
@@ -224,58 +283,208 @@ function ossm_sendle_shipment_options(){
 						if($weight > 0){
 
 						if($book_shipment_on=="shipment_submit" && $sendle_reference==""){?>
-							<li><a href="<?php echo admin_url('admin.php?page=create-shipment&method=normal&oid='.$order_id)?>" target="_blank"><?php _e('Create Shipment')?></a><br>
+							<li>
+
+								<a href="<?php
+												  echo esc_url(
+												    wp_nonce_url(
+												      admin_url( 'admin.php?page=create-shipment&method=normal&oid=' . absint($order_id) ),
+												      'ossm_create_shipment'
+												    )
+												  );
+												?>" target="_blank">
+
+								<br>
 								<?php if($satchel_booking == 'yes' && $pickup_country == 'AU' && $receiver_country == 'AU'  && $sendle_setting['satchel_booking_adminlink'] == 'yes' &&  ($sendle_setting['satchel_mode'] == 'both' || $sendle_setting['satchel_mode'] == 'booking')){ ?>
-								<br><a href="<?php echo admin_url('admin.php?page=create-shipment&method=satchel&oid='.$order_id)?>" target="_blank"><?php _e('Create Shipment [Satchel Booking]')?></a>
+								<br>
+
+								<a href="<?php
+												  echo esc_url(
+												    wp_nonce_url(
+												      admin_url( 'admin.php?page=create-shipment&method=satchel&oid=' . absint($order_id) ),
+												      'ossm_create_shipment'
+												    )
+												  );
+												?>" target="_blank">
 							  <?php } ?>
 							</li>
 						<?php }
-
 						if($book_shipment_on=="order_submit" && $sendle_reference==""){?>
-							<li><h2 style="color:red">There seems to be error while submiting please create shipment once more.</h2>
-								<a href="<?php echo admin_url('admin.php?page=create-shipment&method=normal&oid='.$order_id)?>" target="_blank"><?php _e('Create Shipment')?></a><br>
-								<?php if($satchel_booking == 'yes' && $pickup_country == 'AU' && $receiver_country == 'AU' && $sendle_setting['satchel_booking_adminlink'] == 'yes' && ($sendle_setting['satchel_mode'] == 'both' || $sendle_setting['satchel_mode'] == 'booking')){ ?>
-								<br><a href="<?php echo admin_url('admin.php?page=create-shipment&method=satchel&oid='.$order_id)?>" target="_blank"><?php _e('Create Shipment [Satchel Booking]')?></a>
-								<?php } ?>
-							</li>
-						<?php }
+							<li>
+						    <h2 style="color:red">
+						        <?php echo esc_html__( 'There seems to be an error while submitting. Please create shipment once more.', 'official-sendle-shipping-method' ); ?>
+						    </h2>
 
+						    <?php
+								$base_url = admin_url('admin.php?page=create-shipment&method=normal&oid=' . absint($order_id));
+								$url      = wp_nonce_url($base_url, 'ossm_create_shipment'); // adds _wpnonce=
+								?>
+
+								<a href="<?php echo esc_url($url); ?>" target="_blank" rel="noopener noreferrer">
+								  <?php esc_html_e('Create Shipment', 'official-sendle-shipping-method'); ?>
+								</a>
+
+						    <br>
+
+						    <?php if ( $satchel_booking === 'yes' && $pickup_country === 'AU' && $receiver_country === 'AU' && $sendle_setting['satchel_booking_adminlink'] === 'yes'
+						        && ( $sendle_setting['satchel_mode'] === 'both' || $sendle_setting['satchel_mode'] === 'booking' ) ) : ?>
+
+						        <br>
+						        <?php
+										$base_url = admin_url('admin.php?page=create-shipment&method=satchel&oid=' . absint($order_id));
+										$url      = wp_nonce_url($base_url, 'ossm_create_shipment');
+										?>
+
+										<a href="<?php echo esc_url($url); ?>" target="_blank" rel="noopener noreferrer">
+										  <?php esc_html_e('Create Shipment [Satchel Booking]', 'official-sendle-shipping-method'); ?>
+										</a>
+
+						    <?php endif; ?>
+						</li>
+
+						<?php }
 					}else{
+						
 						if($sendle_reference==""){
-							echo "<li><b>Your order weight is 0. Please fix the product weight before booking a shipment. </b></li>";
-							echo "<li>Order weight: ".round($weight,2)." ".$sendleWeightUnit." </li>";
-							echo "<li>&nbsp;</li>";
+							echo '<li><strong>' . esc_html__(
+							    'Your order weight is 0. Please fix the product weight before booking a shipment.',
+							    'official-sendle-shipping-method'
+							) . '</strong></li>';
+
+							echo '<li>' . sprintf(
+							    /* translators: 1: order weight value, 2: weight unit */
+							    esc_html__( 'Order weight: %1$s %2$s', 'official-sendle-shipping-method' ),
+							    esc_html( round( $weight, 2 ) ),
+							    esc_html( $sendleWeightUnit )
+							) . '</li>';
+
+							echo '<li>&nbsp;</li>';
+
 						}
 					}
-
 						if($sendle_reference!=""){
-						$labelsArray = ossm_getDownloadLabelLink($sendle_order_id);
+								$labelsArray = ossm_getDownloadLabelLink($sendle_order_id);
 						?>
-							<li><a href="<?php echo admin_url('admin.php?page=track-shipment&sendle_reference='.$sendle_reference.'&oid='.$order_id); ?>" target="_blank"><?php _e('Track')?></a></li>
-							<?php foreach($labelsArray as $kl=>$vl){ ?>
-								<li><a href="<?php echo admin_url('admin.php?page=download-shipping-label&oid='.$order_id.'&pdfdlink='.$vl['size']); ?>" target="_blank"><?php _e('Download Shipping Label[size='.$vl['size'].']' )?></a></li>
-						<?php } ?>
-							<li><a href="<?php echo admin_url('admin.php?page=cancel-sendle&sendle_order_id='.$sendle_order_id.'&oid='.$order_id); ?>" target="_blank"><?php _e('Cancel Sendle Order')?></a></li>
-							<li><a href="<?php echo admin_url('admin.php?page=viewdetails-sendle&sendle_order_id='.$sendle_order_id.'&oid='.$order_id); ?>" target="_blank"><?php _e('View Sendle Order Details')?></a></li>
+							<li>
+						    <a href="<?php
+						        echo esc_url(
+						            wp_nonce_url(
+						                admin_url(
+						                    'admin.php?page=track-shipment&sendle_reference=' . rawurlencode( $sendle_reference ) . '&oid=' . absint( $order_id )
+						                ),
+						                'ossm_track_shipment'
+						            )
+						        );
+						    ?>" target="_blank">
+						        <?php esc_html_e( 'Track', 'official-sendle-shipping-method' ); ?>
+						    </a>
+						</li>
+							<?php
+							if(isset($labelsArray)) { 
+								foreach ( $labelsArray as $kl => $vl ) {
+								    $download_url = wp_nonce_url(
+								        admin_url(
+								            'admin.php?page=download-shipping-label&oid=' . absint( $order_id ) . '&pdfdlink=' . rawurlencode( $vl['size'] )
+								        ),
+								        'ossm_download_label'
+								    );
+								    ?>
+								    <li>
+								        <a href="<?php echo esc_url( $download_url ); ?>" target="_blank">
+								            <?php
+								            echo esc_html(
+															    sprintf(
+															        /* translators: %s: shipping label size (e.g. A4, cropped) */
+															        __( 'Download Shipping Label [size=%s]', 'official-sendle-shipping-method' ),
+															        $vl['size']
+															    )
+															);
+								            ?>
+								        </a>
+								    </li>
+								    <?php
+								}
+							}
+							?>
+								<li>
+								  <a href="<?php
+								    echo esc_url(
+								      wp_nonce_url(
+								        admin_url(
+								          'admin.php?page=cancel-sendle&sendle_order_id=' . rawurlencode( $sendle_order_id ) . '&oid=' . absint( $order_id )
+								        ),
+								        'ossm_cancel_sendle'
+								      )
+								    );
+								  ?>" target="_blank">
+								    <?php esc_html_e( 'Cancel Sendle Order', 'official-sendle-shipping-method' ); ?>
+								  </a>
+								</li>
+							  <li>
+								  <a href="<?php
+								    echo esc_url(
+								      wp_nonce_url(
+								        admin_url(
+								          'admin.php?page=viewdetails-sendle&sendle_order_id=' . rawurlencode( $sendle_order_id ) . '&oid=' . absint( $order_id )
+								        ),
+								        'ossm_viewdetails_sendle'
+								      )
+								    );
+								  ?>" target="_blank">
+								    <?php esc_html_e( 'View Sendle Order Details', 'official-sendle-shipping-method' ); ?>
+								  </a>
+								</li>
 						<?php
 						}
 					}
-
 				}else{
 					if($book_shipment_on=="order_submit" && $sendle_reference==""){?>
-						<li><h2 style="color:red">There seems to be error while submiting please create shipment once more.</h2>
-							<a href="<?php echo admin_url('admin.php?page=create-shipment&method=normal&oid='.$order_id)?>" target="_blank"><?php _e('Create Shipment')?></a><br>
-							<?php if($satchel_booking == 'yes' && $pickup_country == 'AU' && $receiver_country == 'AU'  && $sendle_setting['satchel_booking_adminlink'] == 'yes' && ($sendle_setting['satchel_mode'] == 'both' || $sendle_setting['satchel_mode'] == 'booking')){ ?>
-							<br><a href="<?php echo admin_url('admin.php?page=create-shipment&method=satchel&oid='.$order_id)?>" target="_blank"><?php _e('Create Shipment [Satche Booking]')?></a>
-							<?php } ?>
-						</li>
+						<li>
+					    <h2 style="color:red">
+					        <?php echo esc_html__(
+					            'There seems to be an error while submitting. Please create the shipment once more.',
+					            'official-sendle-shipping-method'
+					        ); ?>
+					    </h2>
+
+					    <a href="<?php echo esc_url( admin_url(
+					        'admin.php?page=create-shipment&method=normal&oid=' . absint( $order_id )
+					    ) ); ?>" target="_blank" rel="noopener noreferrer">
+					        <?php esc_html_e( 'Create Shipment', 'official-sendle-shipping-method' ); ?>
+					    </a>
+					    <br>
+
+					    <?php if (
+					        $satchel_booking === 'yes'
+					        && $pickup_country === 'AU'
+					        && $receiver_country === 'AU'
+					        && ! empty( $sendle_setting['satchel_booking_adminlink'] )
+					        && $sendle_setting['satchel_booking_adminlink'] === 'yes'
+					        && (
+					            $sendle_setting['satchel_mode'] === 'both'
+					            || $sendle_setting['satchel_mode'] === 'booking'
+					        )
+					    ) : ?>
+
+					        <br>
+					        <a href="<?php echo esc_url( admin_url(
+					            'admin.php?page=create-shipment&method=satchel&oid=' . absint( $order_id )
+					        ) ); ?>" target="_blank" rel="noopener noreferrer">
+					            <?php esc_html_e(
+					                'Create Shipment [Satchel Booking]',
+					                'official-sendle-shipping-method'
+					            ); ?>
+					        </a>
+
+					    <?php endif; ?>
+					</li>
+
 					<?php }
 				}
 			}
 
-
 		}else{
-			echo "<li>No option available</li>";
+			echo '<li>' . esc_html__( 'No option available', 'official-sendle-shipping-method' ) . '</li>';
 		}
 		echo '</ul>';
 } ?>

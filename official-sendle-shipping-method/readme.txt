@@ -1,16 +1,17 @@
 === Sendle Shipping Plugin ===
+Contributors:       joovii
+Plugin Name:        Sendle Shipping Plugin
+Plugin URI:         https://joovii.com/shipping-method/sendle-wp.html
+Tags:               shipping-delivery, woocommerce, joovii, sendle, tracking
+Author URI:         https://joovii.com
+Author:             Bivash Ranjan Munshi
+Donate link:        https://joovii.com/woocommerce-plugin/wordpress-sendle-premium-plugin
+Requires at least:  3.0
+Tested up to:       6.9
+Stable tag:         6.03
+License:            GPLv2 or later
+License URI:        https://www.gnu.org/licenses/gpl-2.0.html
 
-Contributors:      joovii
-Plugin Name:       Sendle Shipping Plugin
-Plugin URI:        https://joovii.com/shipping-method/sendle-wp.html
-Tags:              shipping-delivery, woocommerce, shipping, sendle, ordering, joovii, tracking
-Author URI:        https://joovii.com
-Author:            Bivash Ranjan Munshi
-Donate link:       https://joovii.com/woocommerce-plugin/wordpress-sendle-premium-plugin
-Requires at least: 3.0
-Tested up to:      6.6.1
-Stable tag:        shipping-delivery, woocommerce, shipping, sendle, ordering, joovii, tracking
-Version:           6.02
 
 == Description ==
 Sendle is an award-winning, 100% carbon neutral, door-to-door shipping carrier, designed to help small businesses thrive with simple, reliable, affordable shipping.
@@ -245,6 +246,8 @@ Added the premium plugin link.
 https://wordpress.org/plugins/official-sendle-shipping-method
 * Version 6.02 :
 Sendle /quote endpoint is replaced with /products endpoint
+* Version 6.03 :
+Security Features Implemented
 
 == Frequently Asked Questions ==
 https://joovii.com/discuss/

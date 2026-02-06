@@ -1,4 +1,7 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 
 function ossm_sendle_trackingemailtemplate(){
 
@@ -6,6 +9,10 @@ function ossm_sendle_trackingemailtemplate(){
 		die('You must be logged in to submit this form.');
 	}
 	
+	if ( ! current_user_can('manage_woocommerce') && ! current_user_can('manage_options') ) {
+	    wp_die( 'Unauthorized', 403 );
+	}
+
 	$validPostAction = 0;
 	
 	if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'saveTemplate' ) 
@@ -34,7 +41,7 @@ function ossm_sendle_trackingemailtemplate(){
 	$postemailTemplateVal='';
 	
 	if($validPostAction && isset($_POST['sendle_tracking_email_template'])){
-		$postemailTemplateVal = sanitize_textarea_field($_POST['sendle_tracking_email_template']);
+		$postemailTemplateVal = sanitize_textarea_field( wp_unslash($_POST['sendle_tracking_email_template']) );
 	}
 	
 	$emailTemplateVal = get_option('woocommerce_ossm_sendle_tracking_email_template');
@@ -56,7 +63,7 @@ function ossm_sendle_trackingemailtemplate(){
 		}
 	}
 ?>
-<form method="post" action="<?php echo $_SERVER['REQUEST_URI']; ?>" enctype="multipart/form-data">
+<form method="post" action="<?php echo esc_url( $_SERVER['REQUEST_URI'] ); ?>" enctype="multipart/form-data">
 <?php wp_nonce_field('ossm_sendle_my_custom_form_action', 'ossm_sendle_template_form_nonce'); ?>
 <input type="hidden" name="rate" value="calculate">
 <input type="hidden" name="action" value="saveTemplate">
@@ -64,7 +71,7 @@ function ossm_sendle_trackingemailtemplate(){
     <table cellpadding="0" cellspacing="0" border="0"  width="100%" >
     <tr>
         <td>
-			<textarea rows="15" cols="120" name="sendle_tracking_email_template"> <?php echo $emailTemplateVal; ?> </textarea>
+			<textarea rows="15" cols="120" name="sendle_tracking_email_template"><?php echo esc_textarea($emailTemplateVal);?></textarea>
 		</td>
     </tr>
     <tr>
@@ -74,7 +81,7 @@ function ossm_sendle_trackingemailtemplate(){
         <td align="left">&nbsp;<br><b>Following is the default email template.</b></td>
     </tr>
 		<tr>
-        <td align="left">&nbsp;<br> <?php echo nl2br($defaultValue); ?> </td>
+        <td align="left">&nbsp;<br> <?php echo nl2br( esc_html($defaultValue) ); ?> </td>
     </tr>
     </table>
 </form>

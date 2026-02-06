@@ -1,4 +1,7 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 
 function ossm_sendle_shipping_global_notice() {
     if(!ossm_is_sendle_widget_enable()){
